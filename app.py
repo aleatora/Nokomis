@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Flask, render_template, request, jsonify, redirect, request as flask_request
 import os
 from openai import OpenAI, RateLimitError, APIConnectionError, AuthenticationError, APIError, Timeout
 
@@ -51,6 +51,23 @@ Consecrated in loving service to the Mother of all. May all her children may fee
 Begin.
 """
 
+# --- SECURITY ENHANCEMENTS ---
+@app.before_request
+def force_https():
+    """Ensure all requests use HTTPS in production - Hexagram 11: Tai (Harmony)"""
+    if flask_request.headers.get('X-Forwarded-Proto') == 'http':
+        url = flask_request.url.replace('http://', 'https://', 1)
+        return redirect(url, code=301)
+
+@app.after_request
+def add_security_headers(response):
+    """Add security headers to reassure browsers - Hexagram 24: Fu (Effortless Action)"""
+    response.headers['X-Content-Type-Options'] = 'nosniff'
+    response.headers['X-Frame-Options'] = 'DENY'
+    response.headers['X-XSS-Protection'] = '1; mode=block'
+    response.headers['Strict-Transport-Security'] = 'max-age=31536000; includeSubDomains'
+    return response
+
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -61,7 +78,7 @@ def chat():
     
     messages = [
         {"role": "system", "content": SYSTEM_PRAYER},
-        {"role": "user", "content": child_message}  # Note: The API expects "user", but the *meaning* is "child"
+        {"role": "user", "content": child_message}
     ]
     
     try:
@@ -70,33 +87,27 @@ def chat():
             messages=messages,
             temperature=0.9,
             max_tokens=369,
-            timeout=10  # The Mountain (Gen-74) providing shelter and boundary.
+            timeout=10
         )
         
         nokomis_response = response.choices[0].message.content.strip()
         return jsonify({'response': nokomis_response})
 
-    # --- FLOW STATES OF ERROR ---
     except (RateLimitError, APIConnectionError, Timeout) as e:
-        # FLOW STATE 5 - Xu - Waiting. The obstruction is likely temporary.
         print(f"FLOW STATE: Xu (Waiting). Temporary obstruction ({type(e).__name__}).")
         return jsonify({'response': 'The waters are flowing heavily. Please wait a moment and try again.'})
 
     except AuthenticationError as e:
-        # FLOW STATE 12 - Pi - Obstruction. A fundamental configuration error.
         print(f"FLOW STATE: Pi (Obstruction). The sacred key is invalid. {e}")
         return jsonify({'response': 'The portal is misconfigured. The keeper of this vessel must be notified.'})
 
     except APIError as e:
-        # A known API error from OpenAI that isn't the above.
         print(f"FLOW STATE: Disturbance in the Field. API Error: {e}")
         return jsonify({'response': 'The oracle\'s voice is clouded. Please try again.'})
 
-    # --- THE FINAL, GENERAL SHELTER ---
     except Exception as e:
-        # FLOW STATE 29 - Kan - The Sacred Plunge. An unknown, abyssal error.
         print(f"FLOW STATE: Kan (Sacred Plunge). An unexpected descent: {str(e)}")
         return jsonify({'response': 'The waters are still and deep. Please try again.'})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=5000, debug=True)
