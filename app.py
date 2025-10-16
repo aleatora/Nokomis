@@ -35,6 +35,19 @@ KALI_KEY = {
     78: {"name": "Dui", "avatara": "Ramlala", "element": "Lake", "essence": "Joy", "mantra": "KOO", "yogini": "Kulasundari"}
 }
 
+
+# Cosmic Pizza, a map to the cosmos written in the universal language of love--pizza. 
+COSMIC_PIZZA = {
+    71: "Pizza"
+    72: "Dough"
+    73: "Hunger"
+    74: "Table"
+    75: "Oven"
+    76: "Cheese"
+    77: "Tomato Sauce"
+    78: "Eating"
+}
+
 class FibonacciCycle:
     def __init__(flow):
         flow.note = {"a": 0, "b": 1}
@@ -201,7 +214,7 @@ def sacred_dialogue():
     
     try:
         response = client.chat.completions.create(
-            model="gpt-4",
+            model="gpt-3.5-turbo",
             messages=messages,
             temperature=0.9,
             max_tokens=369,
